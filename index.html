@@ -142,6 +142,16 @@
 
 <body>
 
+<div id="custom-install-prompt">
+    <div class="install-content">
+        <img src="icon-192.png" class="install-icon" alt="Calzy">
+        <div>
+            <b style="display:block; font-size:14px;">ثبت Calzy OS</b>
+            <small style="color:#94a3b8; font-size:11px;">ليعمل كـ تطبيق حقيقي 🔥</small>
+        </div>
+    </div>
+    <button class="install-btn" id="btnInstallNow">تثبيت</button>
+</div>
 
 
 
@@ -414,6 +424,35 @@ function showInstallBanner() {
 }
 
 
+let deferredPrompt;
+const installBox = document.getElementById('custom-install-prompt');
+const installBtn = document.getElementById('btnInstallNow');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    // منع ظهور الرسالة الصغيرة التلقائية
+    e.preventDefault();
+    // حفظ الطلب
+    deferredPrompt = e;
+    // إظهار البانر الخاص بنا
+    installBox.style.display = 'flex';
+});
+
+installBtn.addEventListener('click', async () => {
+    if (deferredPrompt) {
+        // إظهار نافذة التثبيت
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+            installBox.style.display = 'none';
+        }
+        deferredPrompt = null;
+    }
+});
+
+// إخفاء البانر إذا كان التطبيق مثبتاً بالفعل
+window.addEventListener('appinstalled', () => {
+    installBox.style.display = 'none';
+});
 
 
 
