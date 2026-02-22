@@ -3,464 +3,137 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calzy OS | النسخة العلمية الدقيقة</title>
+    <title>مدرب Calzy AI</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --p: #8b5cf6; --s: #10b981; --bg: #05070a; --card: #111827; --text: #f9fafb; --d: #ef4444; --w: #3b82f6; --cr: #f59e0b;
-        }
+        :root { --p: #8b5cf6; --bg: #05070a; --card: #111827; --text: #f9fafb; --s: #10b981; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Cairo', sans-serif; }
-        body { background: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: 100px; }
-        .container { max-width: 450px; margin: 0 auto; padding: 20px; }
+        body { background: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
-        /* Setup Style */
-        .setup-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 5000; padding: 30px; display: flex; flex-direction: column; justify-content: center; }
-        
-        /* Progress Circle */
-        .main-display { position: relative; width: 220px; height: 220px; margin: 0 auto 20px; display: flex; justify-content: center; align-items: center; }
-        svg { transform: rotate(-90deg); width: 220px; height: 220px; }
-        circle { fill: none; stroke-width: 15; stroke-linecap: round; }
-        .track { stroke: rgba(255,255,255,0.05); }
-        .progress { stroke: var(--p); stroke-dasharray: 628; stroke-dashoffset: 628; transition: 1s ease; filter: drop-shadow(0 0 8px var(--p)); }
-        .inner-content { position: absolute; text-align: center; }
-        .inner-content h2 { font-size: 40px; font-weight: 900; line-height: 1; }
+        /* Header */
+        .header { padding: 15px 20px; background: var(--card); border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: space-between; z-index: 10; }
+        .back-btn { color: white; text-decoration: none; display: flex; align-items: center; gap: 8px; font-weight: bold; }
+        .status { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--s); }
+        .dot { width: 8px; height: 8px; background: var(--s); border-radius: 50%; box-shadow: 0 0 8px var(--s); }
 
-        .glass-card { background: var(--card); border: 1px solid rgba(255,255,255,0.08); border-radius: 24px; padding: 18px; margin-bottom: 12px; }
-        .macro-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px; }
-        .macro-box { text-align: center; background: rgba(255,255,255,0.02); padding: 10px 5px; border-radius: 18px; border: 1px solid rgba(255,255,255,0.05); }
-        .macro-box b { font-size: 13px; color: var(--s); display: block; }
-        
-        .prog-bg { width: 100%; height: 8px; background: rgba(255,255,255,0.05); border-radius: 10px; overflow: hidden; margin-top: 10px; }
-        .prog-fill { height: 100%; width: 0%; transition: 0.5s ease; }
+        /* Chat Area */
+        #chat-box { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; scroll-behavior: smooth; }
+        .msg { max-width: 85%; padding: 12px 18px; border-radius: 20px; font-size: 14px; line-height: 1.6; animation: fadeIn 0.3s ease; }
+        .bot { background: var(--card); border: 1px solid rgba(139, 92, 246, 0.2); align-self: flex-start; border-bottom-right-radius: 2px; }
+        .user { background: var(--p); align-self: flex-end; border-bottom-left-radius: 2px; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.2); }
 
-        .btn-add { border: none; color: white; padding: 6px 12px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 11px; }
-        
-        .vit-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; }
-        .vit-check { width: 20px; height: 20px; border-radius: 6px; border: 2px solid var(--p); display: flex; align-items: center; justify-content: center; font-size: 12px; }
-        .vit-check.active { background: var(--p); }
+        /* Input Area */
+        .input-area { padding: 20px; background: var(--card); border-top: 1px solid rgba(255,255,255,0.05); }
+        .input-wrapper { display: flex; gap: 10px; background: #1f2937; padding: 6px; border-radius: 18px; }
+        input { flex: 1; background: transparent; border: none; padding: 10px 15px; color: white; outline: none; font-size: 15px; }
+        button { background: var(--p); border: none; width: 45px; height: 45px; border-radius: 14px; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        button:active { transform: scale(0.95); }
 
-        input, select { width: 100%; padding: 15px; background: #1f2937; border: 1px solid #374151; border-radius: 14px; color: white; margin-bottom: 12px; outline: none; }
-        .btn-p { width: 100%; padding: 16px; border-radius: 14px; border: none; font-weight: 900; background: var(--p); color: white; cursor: pointer; }
+        /* Typing Animation */
+        .typing { display: none; align-self: flex-start; background: var(--card); padding: 12px; border-radius: 15px; }
+        .dots { display: flex; gap: 4px; }
+        .dots span { width: 5px; height: 5px; background: var(--p); border-radius: 50%; animation: bounce 1.4s infinite; }
+        .dots span:nth-child(2) { animation-delay: 0.2s; }
+        .dots span:nth-child(3) { animation-delay: 0.4s; }
 
-        nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(11, 15, 26, 0.95); backdrop-filter: blur(10px); display: flex; justify-content: space-around; padding: 15px; border-top: 1px solid #1f2937; z-index: 1000; }
-        .nav-item { color: #4b5563; font-size: 24px; cursor: pointer; }
-        .nav-item.active { color: var(--p); }
-
-        .hidden { display: none; }
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000; display: none; align-items: flex-end; }
-        .modal-inner { background: var(--card); width: 100%; border-radius: 30px 30px 0 0; padding: 25px; }
-    
-    
-    /* تنسيق اسم المستخدم الاحترافي */
-.user-name-style {
-    background: linear-gradient(120deg, #8b5cf6, #d8b4fe, #8b5cf6);
-    background-size: 200% auto;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    font-weight: 900;
-    text-shadow: 0 0 15px rgba(139, 92, 246, 0.3);
-    animation: shine 3s linear infinite;
-    display: inline-block;
-}
-
-/* حركة اللمعان */
-@keyframes shine {
-    to { background-position: 200% center; }
-}
-
-    
-    
-    /* تنسيق رسالة المدرب الذكي */
-.coach-msg {
-    background: rgba(139, 92, 246, 0.1);
-    border-right: 3px solid var(--p);
-    padding: 10px 15px;
-    border-radius: 12px;
-    font-size: 13px;
-    color: #cbd5e1;
-    margin-bottom: 20px;
-    animation: fadeIn 1s ease;
-    line-height: 1.5;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-5px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-    
-    
-    /* حالة تخطي السعرات */
-.over-limit {
-    stroke: var(--d) !important; /* اللون الأحمر */
-    filter: drop-shadow(0 0 12px var(--d)) !important;
-}
-
-.danger-text {
-    color: var(--d) !important;
-    animation: shake 0.5s ease-in-out infinite;
-}
-
-/* حركة الاهتزاز */
-@keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-2px); }
-    75% { transform: translateX(2px); }
-}
-
-/* رسالة تحذيرية أسفل الدائرة */
-.warning-msg {
-    color: var(--d);
-    font-size: 11px;
-    font-weight: bold;
-    margin-top: 5px;
-    display: none;
-}
-
-    
-    
-    
-    
+        @keyframes bounce { 0%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-5px); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     </style>
-
-
-
-
-
-<link rel="manifest" href="manifest.json">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="apple-touch-icon" href="vv.png">
-
-
-
-
-
-
 </head>
-
-
 <body>
 
-<div id="custom-install-prompt">
-    <div class="install-content">
-        <img src="icon-192.png" class="install-icon" alt="Calzy">
-        <div>
-            <b style="display:block; font-size:14px;">ثبت Calzy OS</b>
-            <small style="color:#94a3b8; font-size:11px;">ليعمل كـ تطبيق حقيقي 🔥</small>
-        </div>
-    </div>
-    <button class="install-btn" id="btnInstallNow">تثبيت</button>
+<div class="header">
+    <a href="index.html" class="back-btn">
+        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M19 12H5m7 7l-7-7 7-7"></path></svg>
+        الرئيسية
+    </a>
+    <div class="status"> <div class="dot"></div> مدرب Calzy AI </div>
 </div>
 
-
-
-
-<div id="setupLayer" class="setup-overlay hidden">
-    <h1 style="text-align: center; margin-bottom: 20px;">CALZY <span style="color:var(--p)">2026</span></h1>
-    <input type="text" id="setupName" placeholder="الاسم">
-    <select id="setupGender">
-        <option value="male">ذكر</option>
-        <option value="female">أنثى</option>
-    </select>
-    <div style="display: flex; gap: 10px;">
-        <input type="number" id="setupW" placeholder="الوزن (كجم)">
-        <input type="number" id="setupH" placeholder="الطول (سم)">
+<div id="chat-box">
     </div>
-    <input type="number" id="setupA" placeholder="العمر">
-    <select id="setupGoal">
-        <option value="cut">تنشيف 🔥 (عجز 500)</option>
-        <option value="maintain" selected>ثبات ⚖️</option>
-        <option value="bulk">تضخيم 💪 (زيادة 300)</option>
-    </select>
-    <button class="btn-p" onclick="finishSetup()">حساب السعرات بدقة ✅</button>
+
+<div id="typing" class="typing msg">
+    <div class="dots"><span></span><span></span><span></span></div>
 </div>
 
-
-
-<div class="container" id="mainApp">
-    <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-        <h2 id="greetUser">مرحباً</h2>
-        
-        
-        
-        <div onclick="resetSystem()" style="cursor:pointer; font-size: 20px;">⚙️</div>
-    </header>
-
-    <div id="home-page">
-        <div class="main-display">
-            <svg><circle class="track" cx="110" cy="110" r="100"></circle><circle id="progCircle" class="progress" cx="110" cy="110" r="100"></circle></svg>
-            <div class="inner-content"><p style="color:#94a3b8; font-size:12px">المتبقي</p><h2 id="calRem">0</h2><small id="calTotal" style="font-size:10px; color:#6b7280"></small></div>
-        </div>
-
-        <div class="macro-row glass-card">
-            <div class="macro-box"><small>بروتين</small><b id="pVal">0/0</b></div>
-            <div class="macro-box"><small>كارب</small><b id="cbVal">0/0</b></div>
-            <div class="macro-box"><small>دهون</small><b id="fVal">0/0</b></div>
-        </div>
-
-        <div class="glass-card">
-            <div style="display:flex; justify-content:space-between; align-items:center">
-                <span>💧 الماء <small id="wTxt" style="color:var(--w)">0/3 L</small></span>
-                <button class="btn-add" style="background:var(--w)" onclick="addTrack('water', 0.25)">+ ربع لتر</button>
-            </div>
-            <div class="prog-bg"><div id="wBar" class="prog-fill" style="background:var(--w)"></div></div>
-        </div>
-
-        <div class="glass-card">
-            <div style="display:flex; justify-content:space-between; align-items:center">
-                <span>💊 كرياتين <small id="crTxt" style="color:var(--cr)">0/5 g</small></span>
-                <button class="btn-add" style="background:var(--cr)" onclick="addTrack('creatine', 5)">+ 5 جرام</button>
-            </div>
-            <div class="prog-bg"><div id="crBar" class="prog-fill" style="background:var(--cr)"></div></div>
-        </div>
-
-        <div class="glass-card">
-            <h4 style="margin-bottom:10px">💊 الفيتامينات</h4>
-            <div id="vitList"></div>
-        </div>
-    </div>
-
-    <div id="services-page" class="hidden">
-        <h3 style="margin-bottom: 15px;">الخدمات 🛠️</h3>
-        <a href="exercises.html" style="text-decoration:none; color:inherit">
-            <div class="glass-card" style="display:flex; align-items:center; gap:15px">
-                <div style="font-size:30px">💪</div>
-                <div><b>تمارين مخصصة</b><br><small style="color:#94a3b8">اضغط للدخول لجدول التمرين</small></div>
-            </div>
-            
-        </a>
-  
-  
-  
-  
+<div class="input-area">
+    <div class="input-wrapper">
+        <input type="text" id="userInput" placeholder="اسأل عن التمارين أو التغذية..." onkeypress="if(event.key==='Enter') sendMessage()">
+        <button onclick="sendMessage()" id="sendBtn">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M5 12h14M12 5l7 7-7 7"></path></svg>
+        </button>
     </div>
 </div>
-
-
-
-
-
-<div id="addModal" class="modal"><div class="modal-inner">
-    <h3>إضافة وجبة</h3>
-    <input type="text" id="inN" placeholder="اسم الوجبة">
-    <input type="number" id="inC" placeholder="السعرات">
-    <div style="display: flex; gap: 8px;"><input type="number" id="inP" placeholder="بروتين"><input type="number" id="inCB" placeholder="كارب"><input type="number" id="inF" placeholder="دهون"></div>
-    <button class="btn-p" onclick="confirmAdd()">إضافة ✅</button>
-    <button onclick="closeAdd()" style="width:100%; margin-top:10px; background:none; border:none; color:#6b7280;">إلغاء</button>
-</div></div>
-
-<nav>
-    <div class="nav-item active" id="n-home" onclick="showPage('home')">🏠</div>
-    <div class="nav-item" onclick="openAdd()">➕</div>
-    <div class="nav-item" id="n-serv" onclick="showPage('services')">🛠️</div>
-</nav>
 
 <script>
-    let db = {
-        setup: false, current: {c:0, p:0, cb:0, f:0}, 
-        water: 0, creatine: 0, vits: {omega3: false, multi: false, d3: false},
-        logs: [], date: ""
-    };
+    const API_KEY = "AIzaSyAKqNlOzS-C0NdKD4Y2nUg70UBdcf6ZKw4";
+    const chatBox = document.getElementById('chat-box');
 
-    function finishSetup() {
-        const name = document.getElementById('setupName').value;
-        const w = parseFloat(document.getElementById('setupW').value);
-        const h = parseFloat(document.getElementById('setupH').value);
-        const a = parseFloat(document.getElementById('setupA').value);
-        const gender = document.getElementById('setupGender').value;
-        const goal = document.getElementById('setupGoal').value;
-
-        if(!name || !w || !h || !a) return alert("أكمل جميع البيانات بدقة");
-
-        // معادلة ميفلين سانت جيور (الأدق علمياً)
-        let bmr = (10 * w) + (6.25 * h) - (5 * a);
-        bmr = (gender === 'male') ? bmr + 5 : bmr - 161;
-
-        // معامل النشاط (رياضي متوسط = 1.55)
-        let tdee = bmr * 1.55;
-
-        // ضبط الهدف
-        if(goal === 'cut') tdee -= 500;
-        else if(goal === 'bulk') tdee += 300;
-
-        // حساب الماكروز الرياضي
-        let proteinG = w * 2.2; // 2.2 جرام لكل كيلو
-        let fatG = w * 0.8;    // 0.8 جرام لكل كيلو
-        let remainingCals = tdee - (proteinG * 4) - (fatG * 9);
-        let carbG = remainingCals / 4;
-
-        db = {
-            setup: true, name,
-            goals: { c: Math.round(tdee), p: Math.round(proteinG), cb: Math.round(carbG), f: Math.round(fatG) },
-            current: {c:0, p:0, cb:0, f:0}, water: 0, creatine: 0,
-            vits: {omega3: false, multi: false, d3: false},
-            logs: [], date: new Date().toLocaleDateString()
-        };
-        save(); location.reload();
-    }
-
-    function addTrack(type, val) {
-        db[type] = (db[type] || 0) + val;
-        save(); render();
-    }
-
-    function toggleVit(key) {
-        db.vits[key] = !db.vits[key];
-        save(); render();
-    }
-
-    function render() {
-        if(!db.setup) { document.getElementById('setupLayer').classList.remove('hidden'); return; }
-        
-        const today = new Date().toLocaleDateString();
-        if(db.date !== today) {
-            db.current = {c:0, p:0, cb:0, f:0}; db.water = 0; db.creatine = 0; 
-            db.vits = {omega3: false, multi: false, d3: false};
-            db.logs = []; db.date = today; save();
-        }
-
-        // ابحث عن هذا السطر في دالة render وغيره ليكون هكذا:
-document.getElementById('greetUser').innerHTML = `مرحباً، <span class="user-name-style">${db.name}</span>`;
-
-        const rem = Math.max(0, db.goals.c - db.current.c);
-        document.getElementById('calRem').innerText = rem;
-        document.getElementById('calTotal').innerText = `هدفك: ${db.goals.c} سعر`;
-        document.getElementById('progCircle').style.strokeDashoffset = 628 - (Math.min(db.current.c / db.goals.c, 1) * 628);
-        
-        document.getElementById('pVal').innerText = `${Math.round(db.current.p)}/${db.goals.p}g`;
-        document.getElementById('cbVal').innerText = `${Math.round(db.current.cb)}/${db.goals.cb}g`;
-        document.getElementById('fVal').innerText = `${Math.round(db.current.f)}/${db.goals.f}g`;
-
-        document.getElementById('wTxt').innerText = `${db.water.toFixed(2)} / 3 L`;
-        document.getElementById('wBar').style.width = Math.min((db.water/3)*100, 100) + "%";
-        
-        document.getElementById('crTxt').innerText = `${db.creatine} / 5 g`;
-        document.getElementById('crBar').style.width = Math.min((db.creatine/5)*100, 100) + "%";
-
-        const vitLabels = {omega3: "أوميجا 3", multi: "مالتي فيتامين", d3: "فيتامين D3"};
-        document.getElementById('vitList').innerHTML = Object.keys(db.vits).map(key => `
-            <div class="vit-item" onclick="toggleVit('${key}')">
-                <span>${vitLabels[key]}</span>
-                <div class="vit-check ${db.vits[key]?'active':''}">
-                    ${db.vits[key]?'✓':''}
-                </div>
-            </div>
-        `).join('');
-    }
-
-    function confirmAdd() {
-        const c = parseFloat(document.getElementById('inC').value) || 0;
-        const p = parseFloat(document.getElementById('inP').value) || 0;
-        const cb = parseFloat(document.getElementById('inCB').value) || 0;
-        const f = parseFloat(document.getElementById('inF').value) || 0;
-        db.current.c += c; db.current.p += p; db.current.cb += cb; db.current.f += f;
-        save(); render(); closeAdd();
-    }
-
-    function showPage(p) {
-        document.getElementById('home-page').classList.toggle('hidden', p !== 'home');
-        document.getElementById('services-page').classList.toggle('hidden', p !== 'services');
-        document.getElementById('n-home').classList.toggle('active', p === 'home');
-        document.getElementById('n-serv').classList.toggle('active', p === 'services');
-    }
-    function openAdd() { document.getElementById('addModal').style.display = 'flex'; }
-    function closeAdd() { document.getElementById('addModal').style.display = 'none'; }
-    function save() { localStorage.setItem('calzy_vScientist', JSON.stringify(db)); }
-    function resetSystem() { if(confirm("إعادة ضبط؟")) { localStorage.clear(); location.reload(); } }
-
+    // 1. تحميل المحادثات السابقة عند الفتح
     window.onload = () => {
-        const saved = localStorage.getItem('calzy_vScientist');
-        if(saved) db = JSON.parse(saved);
-        render();
+        const savedChat = JSON.parse(localStorage.getItem('calzy_chat_history')) || [
+            { role: 'bot', text: 'أهلاً بك يا بطل! أنا مدربك الذكي. كيف يمكنني مساعدتك اليوم في رحلتك الرياضية؟' }
+        ];
+        savedChat.forEach(msg => appendToUI(msg.text, msg.role));
     };
 
+    async function sendMessage() {
+        const input = document.getElementById('userInput');
+        const text = input.value.trim();
+        if (!text) return;
 
+        // إضافة رسالة المستخدم للواجهة والحفظ
+        saveAndAppend(text, 'user');
+        input.value = '';
 
-let deferredPrompt;
+        // إظهار التفكير
+        document.getElementById('typing').style.display = 'block';
+        chatBox.scrollTop = chatBox.scrollHeight;
 
-// 1. الاستماع لطلب المتصفح بتثبيت التطبيق
-window.addEventListener('beforeinstallprompt', (e) => {
-    // منع المتصفح من إظهار الرسالة الافتراضية فوراً
-    e.preventDefault();
-    // حفظ الحدث لاستخدامه لاحقاً
-    deferredPrompt = e;
-    
-    // إظهار زرار التحميل الخاص بك (لو كنت خافيه)
-    // أو إظهار "رسالة ترحيبية" للمستخدم تخبره أن التطبيق جاهز للتثبيت
-    showInstallBanner(); 
-});
+        try {
+            // استخدام رابط الـ v1beta لضمان التوافق مع المفاتيح المجانية
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: `أنت خبير رياضى محترف جداً. أجب باختصار واحترافية بالعربية: ${text}` }] }]
+                })
+            });
 
-// 2. دالة لإظهار رسالة بسيطة للمستخدم (تقدر تخصص شكلها بـ CSS)
-function showInstallBanner() {
-    const banner = document.createElement('div');
-    banner.id = 'install-banner';
-    banner.style = `
-        position: fixed; bottom: 80px; left: 20px; right: 20px;
-        background: var(--p); color: white; padding: 15px;
-        border-radius: 15px; display: flex; justify-content: space-between;
-        align-items: center; z-index: 9999; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    `;
-    banner.innerHTML = `
-        <span style="font-size: 14px; font-weight: bold;">تثبيت Calzy OS على شاشة هاتفك؟ 🔥</span>
-        <button id="install-btn" style="background: white; color: var(--p); border: none; padding: 8px 15px; border-radius: 10px; font-weight: 900; cursor: pointer;">تثبيت</button>
-    `;
-    document.body.appendChild(banner);
+            const data = await response.json();
+            
+            if(data.candidates && data.candidates[0].content.parts[0].text) {
+                const aiMsg = data.candidates[0].content.parts[0].text;
+                saveAndAppend(aiMsg, 'bot');
+            } else {
+                throw new Error("Invalid Response");
+            }
 
-    // 3. لما المستخدم يدوس على زرار "تثبيت"
-    document.getElementById('install-btn').addEventListener('click', async () => {
-        if (deferredPrompt) {
-            // إظهار نافذة التثبيت الأصلية للموبايل
-            deferredPrompt.prompt();
-            // انتظر رد المستخدم
-            const { outcome } = await deferredPrompt.userChoice;
-            console.log(`User response to install: ${outcome}`);
-            // تصفير المتغير
-            deferredPrompt = null;
-            // إخفاء البانر
-            banner.remove();
+        } catch (error) {
+            console.error(error);
+            appendToUI("عذراً، يبدو أن هناك ضغط على الخدمة حالياً. جرب مرة أخرى بعد قليل.", "bot");
+        } finally {
+            document.getElementById('typing').style.display = 'none';
         }
-    });
-}
-
-
-let deferredPrompt;
-const installBox = document.getElementById('custom-install-prompt');
-const installBtn = document.getElementById('btnInstallNow');
-
-window.addEventListener('beforeinstallprompt', (e) => {
-    // منع ظهور الرسالة الصغيرة التلقائية
-    e.preventDefault();
-    // حفظ الطلب
-    deferredPrompt = e;
-    // إظهار البانر الخاص بنا
-    installBox.style.display = 'flex';
-});
-
-installBtn.addEventListener('click', async () => {
-    if (deferredPrompt) {
-        // إظهار نافذة التثبيت
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        if (outcome === 'accepted') {
-            installBox.style.display = 'none';
-        }
-        deferredPrompt = null;
     }
-});
 
-// إخفاء البانر إذا كان التطبيق مثبتاً بالفعل
-window.addEventListener('appinstalled', () => {
-    installBox.style.display = 'none';
-});
+    function saveAndAppend(text, role) {
+        appendToUI(text, role);
+        const history = JSON.parse(localStorage.getItem('calzy_chat_history')) || [];
+        history.push({ role, text });
+        localStorage.setItem('calzy_chat_history', JSON.stringify(history.slice(-20))); // حفظ آخر 20 رسالة فقط
+    }
 
-
-
+    function appendToUI(text, role) {
+        const div = document.createElement('div');
+        div.className = `msg ${role}`;
+        // تنظيف النص من النجوم الزائدة التي يرسلها الذكاء الاصطناعي
+        div.innerText = text.replace(/\*\*/g, ""); 
+        chatBox.appendChild(div);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
 </script>
-
-
-
-
 
 </body>
 </html>
