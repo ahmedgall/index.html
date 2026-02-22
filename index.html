@@ -105,6 +105,42 @@
             statusTxt.innerText = "خطأ في الاتصال بالإنترنت!";
         }
     }
+
+
+
+
+
+
+
+    function handleResult(code) {
+        if (navigator.vibrate) navigator.vibrate(100);
+        statusTxt.innerText = "تمت القراءة بنجاح ✅";
+        document.getElementById('result-card').style.display = 'block';
+        document.getElementById('retry-btn').style.display = 'block';
+
+        // قاعدة بيانات مخصصة (سجائر ومنتجات محلية)
+        const local = {
+            "6223000034138": { n: "كليوباترا (سجائر)", i: "⚠️ تحذير: تدمر الصحة واللياقة البدنية بشكل مباشر." },
+            "002780000014": { n: "مارلبورو أحمر", i: "⚠️ خطر: تؤدي لأمراض القلب وتدمر الرئة." },
+            "40235007": { n: "L&M Red (سجائر)", i: "⚠️ تحذير: تحتوي على قطران ونيكوتين عالٍ، تضعف عضلة القلب وتقلل الأكسجين في الدم." },
+            "40235021": { n: "L&M Blue (سجائر)", i: "⚠️ تحذير: التدخين يدمر الأداء الرياضي ويسبب ضيق التنفس." },
+            "7622210813954": { n: "أوريو", i: "عالي السكريات، 140 سعر حراري للقطعة." }
+        };
+
+        if (local[code]) {
+            document.getElementById('p-name').innerText = local[code].n;
+            document.getElementById('p-info').innerText = local[code].i;
+            document.getElementById('p-name').style.color = "#ef4444"; // تلوين الاسم بالأحمر للتحذير
+        } else {
+            fetchProduct(code);
+        }
+    }
+
+
+
+
+
+
 </script>
 
 </body>
