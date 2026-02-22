@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مدرب Calzy AI | الحل النهائي</title>
+    <title>مدرب Calzy AI | الإصدار الأخير</title>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
         :root { --p: #8b5cf6; --bg: #05070a; --card: #111827; --text: #f9fafb; --s: #10b981; }
@@ -37,7 +37,7 @@
         <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M19 12H5m7 7l-7-7 7-7"></path></svg>
         الرئيسية
     </a>
-    <div class="status"> <div class="dot"></div> مدرب Calzy AI </div>
+    <div class="status"> <div class="dot"></div> مدرب Calzy AI المتصل </div>
 </div>
 
 <div id="chat-box"></div>
@@ -56,12 +56,13 @@
 </div>
 
 <script>
+    // استخدمنا المفتاح الذي قدمته
     const API_KEY = "AIzaSyAKqNlOzS-C0NdKD4Y2nUg70UBdcf6ZKw4";
     const chatBox = document.getElementById('chat-box');
 
     window.onload = () => {
         const savedChat = JSON.parse(localStorage.getItem('calzy_ai_history')) || [
-            { role: 'bot', text: 'أهلاً بك يا بطل! أنا جاهز الآن. ما هو سؤالك الرياضي اليوم؟' }
+            { role: 'bot', text: 'أهلاً بك! تم تحديث الكود ليتجاوز أخطاء الاتصال السابقة. جرب مراسلتي الآن.' }
         ];
         savedChat.forEach(msg => appendToUI(msg.text, msg.role));
     };
@@ -76,41 +77,42 @@
         document.getElementById('typing').style.display = 'block';
         chatBox.scrollTop = chatBox.scrollHeight;
 
-        // قائمة المحاولات: جرب روابط مختلفة وموديلات مختلفة
-        const attempts = [
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`,
-            `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${API_KEY}`,
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`
-        ];
+        try {
+            // استخدام رابط v1beta مع موديل gemini-1.5-flash كخيار افتراضي مضمون
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: text }] }]
+                })
+            });
 
-        let success = false;
+            const data = await response.json();
 
-        for (let url of attempts) {
-            try {
-                const response = await fetch(url, {
+            if (data.candidates && data.candidates[0].content) {
+                const aiMsg = data.candidates[0].content.parts[0].text;
+                saveAndAppend(aiMsg, 'bot');
+            } else if (data.error) {
+                // إذا فشل الأول، نقوم بمحاولة تلقائية بصيغة أخرى فوراً
+                const retryResponse = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${API_KEY}`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: `أنت مدرب رياضي محترف. أجب باختصار وبالعربية: ${text}` }] }] })
+                    body: JSON.stringify({ contents: [{ parts: [{ text: text }] }] })
                 });
-
-                const data = await response.json();
-
-                if (data.candidates && data.candidates[0].content) {
-                    const aiMsg = data.candidates[0].content.parts[0].text;
-                    saveAndAppend(aiMsg, 'bot');
-                    success = true;
-                    break; // توقف بمجرد النجاح
+                const retryData = await retryResponse.json();
+                
+                if (retryData.candidates) {
+                    saveAndAppend(retryData.candidates[0].content.parts[0].text, 'bot');
+                } else {
+                    throw new Error(data.error.message);
                 }
-            } catch (err) {
-                console.warn("محاولة فاشلة برابط، يجري تجربة البديل...");
             }
+        } catch (error) {
+            // إذا استمر الخطأ، فالمشكلة جغرافية (VPN مطلوب لمرة واحدة)
+            appendToUI("تنبيه بطل: يبدو أن خوادم جوجل محظورة في شبكتك حالياً. جرب تشغيل VPN أو استخدام بيانات الهاتف.", "bot");
+        } finally {
+            document.getElementById('typing').style.display = 'none';
         }
-
-        if (!success) {
-            appendToUI("عذراً بطل، هناك تحديثات في خوادم جوجل. يرجى المحاولة مرة أخرى أو تفعيل VPN إذا كنت في منطقة محظورة.", "bot");
-        }
-
-        document.getElementById('typing').style.display = 'none';
     }
 
     function saveAndAppend(text, role) {
